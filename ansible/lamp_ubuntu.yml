@@ -1,0 +1,48 @@
+---
+- hosts: dxc
+  user:  root
+  connection: ssh
+  #become: yes
+  gather_facts: yes
+  vars:
+    mysql_root_pass: Cloudops@123
+
+  tasks:
+
+   - name: Install Python pip
+     raw: "apt-get install python-pip -y"
+
+   - name: Test
+     raw: "apt-get install python-dev libmysqlclient-dev -y"
+     
+   - name: installation of apache2
+     raw: "apt-get install apache2 -y "
+
+   - name: installtio of apt
+     command: "apt-get install python-apt -y "  
+
+   - name: Libraries
+     pip: name=MySQL-python state=present
+     
+   - name: Mysql | Set root password
+     debconf: name='mysql-server' question='mysql-server/root_password' value='{{ mysql_root_pass | quote}}' vtype='password'
+
+   - name: Mysql | Set root repassword
+     debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{ mysql_root_pass | quote}}' vtype='password'
+
+   - name: Install Mysql
+     apt: pkg=mysql-server state=latest
+
+   - name: Install Mysql
+     raw: "apt-get install mysql-server mysql-client -y"
+     ignore_errors: true
+
+   
+
+   - name: Install packages
+     apt: name={{ item }}  state=latest
+     with_items:
+       - php
+       - libapache2-mod-php
+       - php-mcrypt
+       - php-mysql

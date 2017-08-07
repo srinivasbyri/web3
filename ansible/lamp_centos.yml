@@ -1,0 +1,58 @@
+---
+- hosts: dxc
+  become: yes
+  connection: ssh
+  gather_facts: yes
+  vars:
+    mysql_root_pass: Cloudops@123
+  tasks:
+  - name: ensure apache is at the latest version
+    yum:
+      name: httpd
+      state: latest
+  - name: ensure apache is running
+    service:
+      name: httpd
+      state: started
+
+  - name: Install MySQLrepo
+    get_url:
+       url: http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+       dest: /tmp
+  - name: install rpm from a local file
+    yum:
+      name: /tmp/mysql-community-release-el7-5.noarch.rpm
+      state: present
+      
+  - name: update package
+    yum: 
+      name: '*'
+      state: latest
+
+  - name: Install MySQL
+    yum:
+      name: mysql-server
+      state: latest
+
+  - name: Start the MySQL service
+    service:
+      name: mysqld
+      state: started
+
+ 
+  - name: Change mysql root password
+    shell: |
+      mysql -u root -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{mysql_root_pass}}';"
+      
+#mysql -u root -e ALTER USER 'root'@'localhost' IDENTIFIED BY 'mysql_root_pass';
+
+  - name: restart mysqld
+    service:
+      name: mysqld
+      state: restarted
+
+  - name: Install packages for php
+    yum: name={{ item }}  state=latest
+    with_items:
+       - php
+       - php-mysql
